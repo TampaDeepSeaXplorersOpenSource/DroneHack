@@ -14,6 +14,17 @@
 #define DEGREES_PER_RADIAN	57.2958
 #define	CLOSE_ENOUGH_METERS	3.0
 
+#define PI	3.14159265
+#define	FOURTHPI (PI / 4)
+#define DEGREES_TO_RADIANS (PI / 180)
+#define RADIANS_TO_DEGREES (180.0 / PI)
+
+//Ellipsoid name, Equatorial Radius, square of eccentricity
+
+#define ELLIPSOID_NAME 			"WGS-84"
+#define	EQUATORIAL_RADIUS		6378137
+#define ECCENTRICITY_SQUARED	0.00669438
+
 double wpt_TC( Waypoint fromWPT, Waypoint toWPT );
 double wpt_distance( Waypoint first, Waypoint second );
 
@@ -33,5 +44,11 @@ Direction mag_hdg_to_wpt( Waypoint wpt, Waypoint fix, int surfacingInterval,
 
 bool isCloseEnough( Waypoint fix, Waypoint wpt );
 
+Waypoint latLongToUTM( double latInDegrees, double lonInDegrees,
+						char *dateTimeString );
+
+char UTMLetterDesignator( double latitude );
 
 #endif /* NAV_UTILITIES_H_ */
+
+

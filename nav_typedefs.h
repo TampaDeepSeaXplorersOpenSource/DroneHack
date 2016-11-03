@@ -30,6 +30,7 @@ typedef struct {
 	/* These UTM values are in meters */
 	unsigned int utm_east;
 	unsigned int utm_north;
+	char zone[ 5 ];
 	Timestamp timestamp;		/* If from GPS, time of GPS reading, else 0 */
 } Waypoint;
 
@@ -42,5 +43,14 @@ typedef struct {
 	Timestamp ETA;				/* Estimated Time of Arrival */
 	Drift	drift;				/* Last computed drift and correction angle. */
 } RouteSegment;
+
+
+//definitions for lat/long to UTM conversions
+typedef struct
+{
+	char *ellipsoidName;
+	double equatorialRadius;
+	double eccentricitySquared;
+} Ellipsoid;
 
 #endif /* NAV_TYPEDEFS_H_ */

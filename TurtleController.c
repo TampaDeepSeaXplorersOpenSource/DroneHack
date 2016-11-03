@@ -18,26 +18,46 @@ int main( int argc, char **argv )
 {
 	/* Turtle Controller */
 
-	Waypoint wpt = { 0, 0, 0 };
-	Waypoint home = { 0, 0, 0 };
+	Waypoint wpt;
+	Waypoint home;
 	int numberOfWPTs = 0;
 	int currentWPT = 0;	/* first WPT is #0 */
 	bool abortMission = false;
 	float magVar = 0.0;
+	double noCurrentSpeed; /* estimated speed when water is calm (no current)*/
 	long batteryDuration = 0;
 	int surfacingInterval;
+	double latInDegrees;
+	double lonInDegrees;
 	Waypoint lastPosition;
+
+#if 0
+	latInDegrees = 27.954159;
+	lonInDegrees = -82.529316;
+	char dateTimeString[] = "121102141516.172";
+	wpt = latLongToUTM( latInDegrees, lonInDegrees, dateTimeString );
+
+
+	printf( "LAT = %lf, LON = %lf\n", wpt.utm_east, wpt.utm_north );
+	printf( "Zone = %s, EASTING = %lf, NORTHING = %lf\n", wpt.utm_zone,
+														wpt.utm_east, upt.utm_north );
+
+	return(0);
+#endif
 
 	FILE *missionFilePtr = fopen( MISSION_FILE, "r" );
 
 	/* First line of mission file is the magnetic variation. */
-	fscanf( missionFilePtr, "%f\n", &magVar );
+	(void)fscanf( missionFilePtr, "%f\n", &magVar );
 
-	/* Second line is the time interval between surfacing (in seconds). */
-	fscanf( missionFilePtr, "%d\n", &surfacingInterval );
+	/* Second line is the estimated speed in a "no current" area. */
+	(void)fscanf( missionFilePtr, "%lf\n", &noCurrentSpeed );
 
-	/* Third line is number of waypoints (WPTs) in file. */
-	fscanf( missionFilePtr, "%d\n", &numberOfWPTs );
+	/* Third line is the time interval between surfacing (in seconds). */
+	(void)fscanf( missionFilePtr, "%d\n", &surfacingInterval );
+
+	/* Fourth line is number of waypoints (WPTs) in file. */
+	(void)fscanf( missionFilePtr, "%d\n", &numberOfWPTs );
 
 	/**********
 	 * Take the initial GPS reading. This is our launch point. This is where we
@@ -67,7 +87,10 @@ int main( int argc, char **argv )
 	 while ( ( currentWPT < numberOfWPTs ) && ( !abortMission ) )
 	 {
 		 /* Read the next waypoint in the mission. */
-		 fscanf( missionFilePtr, "%d %d\n", &wpt.utm_east, &wpt.utm_north );
+		 (void)fscanf( missionFilePtr, "%lf %lf\n", &latInDegrees, &lonInDegrees );
+
+		 /* convert to UTM. The time value is unused, so insert dummy value. */
+		 wpt = latLongToUTM( latInDegrees, lonInDegrees, "120101000000.000" );
 
 		 /* Go to the next WPT. Return boolean value indicates if we abort. */
 		 abortMission = navigateToWPT( lastPosition, &wpt, &batteryDuration,
