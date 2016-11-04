@@ -12,7 +12,8 @@
 #include "nav_typedefs.h"
 
 #define DEGREES_PER_RADIAN	57.2958
-#define	CLOSE_ENOUGH_METERS	3.0
+#define	CLOSE_ENOUGH_METERS	1.0
+#define MAX_DISTANCE_ON_SURFACE	3.0
 
 #define PI	3.14159265
 #define	FOURTHPI (PI / 4)
@@ -35,6 +36,14 @@ Waypoint readGPS();
 
 double getSpeed();
 
+bool createRouteSegment( Waypoint lastPosition, Waypoint toWPT,
+						 int surfacingInterval,
+							RouteSegment *routeSegmentPtr,
+							double speedInMetersPerSecond );
+
+Waypoint computeSegmentEnd( Waypoint fromWPT, Direction trueCourse,
+							double segmentDistance );
+
 Timestamp compute_WPT_ETA( Waypoint wpt, Waypoint fix );
 Drift calculate_drift( Waypoint anticipatedWPT, Waypoint fix,
 					   int trueCourse, int surfacingInterval );
@@ -45,7 +54,7 @@ Direction mag_hdg_to_wpt( Waypoint wpt, Waypoint fix, int surfacingInterval,
 bool isCloseEnough( Waypoint fix, Waypoint wpt );
 
 Waypoint latLongToUTM( double latInDegrees, double lonInDegrees,
-						char *dateTimeString );
+					   char *dateTimeString );
 
 char UTMLetterDesignator( double latitude );
 

@@ -88,6 +88,103 @@ double wpt_TC( Waypoint fromWPT, Waypoint toWPT )
 	return tcInDegrees;
 }
 
+bool createRouteSegment( Waypoint lastPosition, Waypoint toWPT,
+							int surfacingInterval,
+							RouteSegment *routeSegmentPtr,
+							double speedInMetersPerSecond )
+{
+	double totalDistance;
+	double segmentDistance;
+	double timeToWPT;
+
+	/* Need to compute TC from where we are (lastPosition) to where we are */
+	/* going. */
+	routeSegmentPtr->originationWPT = lastPosition;
+
+	routeSegmentPtr->TC = (Direction)(trunc( wpt_TC( lastPosition, toWPT ) ) );
+
+	/* Find the distance to the toWPT. */
+	totalDistance = wpt_distance( lastPosition, toWPT );
+
+	/* Can we make it to the toWPT in one route segment (before next time to */
+	/* surface?).
+	 *
+	 * NOTE: This calculation really should be improved by taking estimated
+	 * current into account.
+	 *
+	 * timeToWPT = totalDistance / (speedInMetersPerSecond +/- current)
+	 *
+	 *
+	 */
+	timeToWPT = totalDistance / speedInMetersPerSecond;
+
+	if ( timeToWPT <=  surfacingInterval )
+	{
+		segmentDistance = totalDistance;
+		routeSegmentPtr->ETE = timeToWPT;
+	}
+
+	timeToWPT = segmentDistance / speedInMetersPerSecond;
+
+	/* Are we close enough to WPT to proceed on surface? */
+	if ( segmentDistance <= MAX_DISTANCE_ON_SURFACE )
+	{
+		routeSegmentPtr->proceedOnSurface = true;
+		routeSegmentPtr->destinationWPT = toWPT;
+	}
+	else
+	{
+		routeSegmentPtr->proceedOnSurface = false;
+		routeSegmentPtr->destinationWPT = computeSegmentEnd( lastPosition,
+										                   routeSegmentPtr->TC,
+														   segmentDistance );
+	}
+
+	Direction	MH;				/* Magnetic Heading */
+	long	ETE;				/* Estimated Time Enroute (in SECONDS) */
+	Timestamp ETA;
+}
+
+Waypoint computeSegmentEnd( Waypoint fromWPT, Direction trueCourse,
+							double segmentDistance )
+{
+	Waypoint toWPT;
+	double eastDiff;
+	double northDiff;
+	double tcInRadians;
+
+	/**
+	 * Figure out which quadrant the segment will lie in, measured from fromWPT
+	 * as the origin.
+	 */
+
+	switch( trueCourse / 90 )
+	{
+	case 0:	/* Quadrant I */
+		tcInRadians = ( 90 - trueCourse ) * DEGREES_TO_RADIANS;
+		break;
+	case 1: /* Quadrant IV */
+		tcInRadians = ( 90 - trueCourse ) * DEGREES_TO_RADIANS;
+		break;
+	case 2: /* Quadrant III */
+		tcInRadians = ( 90 - trueCourse ) * DEGREES_TO_RADIANS;
+		break;
+	}
+
+	northDiff = segmentDistance * sin( tcInRadians );
+	eastDiff = segmentDistance * cos( tcInRadians );
+
+	fromWPT.timestamp = (Timestamp)0;
+	fromWPT.utm_east += eastDiff;
+	fromWPT.utm_north += northDiff;
+
+	/* For now, presume we stay within same UTM zone. */
+	strcpy( toWPT.zone, fromWPT.zone );
+
+	return toWPT;
+}
+
+
 bool navigateToWPT( Waypoint startWPT, Waypoint* destWPTPtr,
 					long* batteryDurationPtr, int surfacingInterval )
 {
@@ -110,7 +207,8 @@ bool navigateToWPT( Waypoint startWPT, Waypoint* destWPTPtr,
 		 * execute the segment. Set flag to indicate we do not have enough
 		 * battery to continue the mission.
 		 */
-		//okToContinue = createRouteSegment(lastPosition, toWPT, &routeSegment);
+		okToContinue = createRouteSegment(lastPosition, toWPT,
+											surfacingInterval, &routeSegment);
 		if ( okToContinue )
 		{
 			/****

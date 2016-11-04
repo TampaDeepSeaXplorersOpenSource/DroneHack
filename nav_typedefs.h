@@ -42,6 +42,7 @@ typedef struct {
 	long	ETE;				/* Estimated Time Enroute (in SECONDS) */
 	Timestamp ETA;				/* Estimated Time of Arrival */
 	Drift	drift;				/* Last computed drift and correction angle. */
+	bool	proceedOnSurface;	/* if true, OK to proceed on surface to WPT. */
 } RouteSegment;
 
 
